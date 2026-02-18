@@ -4,14 +4,17 @@ import console = require("node:console");
 import userRoutes  from "./routes/userRoutes";
 import sequelize from "./config/database";
 import User from "./models/User";
-
+import path from "path";
 
 
 const app = express();
 const port = 3000;
-app.get('/',(req : Request,res : Response)=> {
-    res.send('Bienvenuuuuuuue');
-});
+
+
+app.use(express.json());
+
+app.use(express.static(path.join(__dirname, "../public")));
+
 app.get("/api/data", (req: Request, res: Response) => {
     res.json(etudiants);
 }) 
@@ -30,27 +33,21 @@ const etudiants = [
     { id: 2 , nom: "Martin", prenom: "Sophie"},
     { id: 3 , nom: "Doe", prenom: "John"}
 ];
-app.use(express.json());
+
 app.use("/api",userRoutes);
 
 
-sequelize.authenticate()
-    .then(()=>{console.log("conex good de database");})
-    .catch((error)=>{console.log("erooooor a ouvrir",error);});
+sequelize.sync()
+  .then(() => {
+    console.log("Database synchronisée");
+
+    app.listen(port, () => {
+      console.log(`serveur lancé sur http://localhost:${port}`);
+    });
+
+  })
+  .catch((error) => {
+    console.log("Erreur DB :", error);
+  });
 
 
-app.post("/api/users", async (req, res) => {
-  const { name } = req.body;
-
-  const newUser = await User.create({ name });
-
-  res.json(newUser);
-});
-app.get("/api/users", async (req, res) => {
-  const users = await User.findAll();
-  res.json(users);
-});
-
-app.listen(port, () => {
-    console.log('serveur lancé sur htpp://localhost:${port}');
-});
